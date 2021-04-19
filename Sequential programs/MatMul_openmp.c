@@ -61,7 +61,8 @@ int main()
 {
     const size_t N = 1000; // size of an array
     int i,j,k;
-//    clock_t start, end;   
+//    clock_t start, end;  
+    double start, end; 
  
     double ** A, ** B, ** C; // matrices
 
@@ -75,47 +76,41 @@ int main()
     rand_init_matrix(B, N);
     zero_init_matrix(C, N);
 
-/*    cout << "Matrix A" << endl;
-    for (int i = 0; i < N; i++)
-    {
-	for (int j = 0; j < N; j++)
-	{
-		cout << A[i][j] << " ";
-	}
-	cout << endl;
-    }
-*/
+
 //    start = clock();
-    auto start = high_resolution_clock::now();
+    //auto start = high_resolution_clock::now();
+    start = omp_get_wtime();
 //  matrix multiplication algorithm
 #pragma omp parallel shared(A,B,C) private(i,j,k)
     {
-        #pragma omp for schedule(static) 
-
-    for (int k = 0; k < N; k++)
-    	for (int j = 0; j < N; j++)
-    	    for (int i = 0; i < N; i++){
-    	    	C[i][j] = A[i][k] * B[k][j];
-    	    }
-    }    
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
+        #pragma omp for collapse (3) 
+	    for (int k = 0; k < N; k++)
+	    	for (int j = 0; j < N; j++)
+	    	    for (int i = 0; i < N; i++){
+	    	    	C[i][j] = A[i][k] * B[k][j];
+	    	    }
+    }   
+    
+    end = omp_get_wtime(); 
+    //auto stop = high_resolution_clock::now();
+    //auto duration = duration_cast<microseconds>(stop - start);
 
     cout << "Time taken by parallel KJI matmul: "
-         << duration.count() << " microseconds" << endl;
+         << end - start << endl;
 //
 
    // end = clock();
 
   //  printf("Time elapsed paralleled (kji): %f seconds.\n", (double)(end - start) / CLOCKS_PER_SEC);
 
-    start = high_resolution_clock::now();
+    //start = high_resolution_clock::now();
+    start = omp_get_wtime();
     
 //  matrix multiplication algorithm OpenMP
 
 #pragma omp parallel shared(A,B,C) private(i,j,k)
     {
-        #pragma omp for schedule(static) 
+        #pragma omp for collapse (3)  
     	    for (int i = 0; i < N; i++)
     		for (int j = 0; j < N; j++)
     	    	    for (int k = 0; k < N; k++){
@@ -123,32 +118,35 @@ int main()
     	    	    }    	    	
     }
 
-    stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(stop - start);
+    end = omp_get_wtime(); 
+    //stop = high_resolution_clock::now();
+    //duration = duration_cast<microseconds>(stop - start);
 
     cout << "Time taken by parallel IGK matmul: "
-         << duration.count() << " microseconds" << endl;
+         << end - start << endl;
 //
 
 
-    start = high_resolution_clock::now();
+    //start = high_resolution_clock::now();
+    start = omp_get_wtime();
 //  matrix multiplication algorithm
 #pragma omp parallel shared(A,B,C) private(i,j,k)
     {
-        #pragma omp for schedule(static) 
-    for (int j = 0; j < N; j++)
-    	for (int i = 0; i < N; i++)
-    	    for (int k = 0; k < N; k++){
-    	    	C[i][j] = A[i][k] * B[k][j];
+        #pragma omp for collapse (3) 
+	    for (int j = 0; j < N; j++)
+		for (int i = 0; i < N; i++)
+		    for (int k = 0; k < N; k++){
+			C[i][j] = A[i][k] * B[k][j];
     	    }    
     }    
 //
-
-    stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(stop - start);
+    end = omp_get_wtime();
+    
+    //stop = high_resolution_clock::now();
+    //duration = duration_cast<microseconds>(stop - start);
 
     cout << "Time taken by parallel JIK matmul: "
-         << duration.count() << " microseconds" << endl;
+         << end - start << endl;
 
 
 
