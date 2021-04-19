@@ -4,37 +4,72 @@
 #include <time.h>
 #include <sys/time.h>
 #include <chrono>
+#include <vector>
 #include <omp.h>
 using namespace std;
 using namespace std::chrono;
 
 
+const size_t N = 1e8;
+const int N_THREADS = omp_get_max_threads();
+//unsigned int seeds[N_THREADS];
+
+std::vector<unsigned int> seeds(N_THREADS);
+
+
+void seedThreads() {
+    int my_thread_id;
+    unsigned int seed;
+    #pragma omp parallel private (seed, my_thread_id)
+    {
+        my_thread_id = omp_get_thread_num();
+        
+        //create seed on thread using current time
+        unsigned int seed = (unsigned) time(NULL);
+        
+        //munge the seed using our thread number so that each thread has its
+        //own unique seed, therefore ensuring it will generate a different set of numbers
+        seeds[my_thread_id] = (seed & 0xFFFFFFF0) | (my_thread_id + 1);
+        
+        printf("Thread %d has seed %u\n", my_thread_id, seeds[my_thread_id]);
+    }
+    
+}
+
 
 int main()
 {
     
-    int i, throws = 99999, insideCircle = 0;
+    int i, throws = 10e6, insideCircle = 0;
     double randX, randY, pi;
-    int numthreads = omp_get_max_threads();
     int tid;
-    uint32_t seed;
+    unsigned int  seed;
+    omp_set_num_threads(N_THREADS);
+    seedThreads();
 
     double start,end;
+    
+    printf("N_THREADS = %d\n", N_THREADS);
     start = omp_get_wtime();
 
-#pragma omp parallel private(tid,randX,randY,i,seed) num_threads(numthreads) reduction(+:insideCircle)
+#pragma omp parallel default(none) \
+                     shared(seeds,throws) \
+                     private(tid,randX,randY,seed) \
+                     num_threads(N_THREADS) \
+                     reduction(+:insideCircle)
 { 
     tid = omp_get_thread_num();
-    seed = (unsigned int) time(NULL);
-    seed = (seed & 0xFFFFFFF0) | (tid + 1);
+    seed = seeds[tid];
     srand(seed);
     
     #pragma omp for
     for (i = 0; i < throws; ++i) 
     {
-      randX = (double) rand_r(&seed) / RAND_MAX;
-      randY = (double) rand_r(&seed) / RAND_MAX;
-      if (randX * randX + randY * randY < 1 + 1e-14) ++insideCircle;
+      randX = rand_r(&seed) / (double) RAND_MAX;
+      randY = rand_r(&seed) /(double) RAND_MAX;
+      if (randX * randX + randY * randY < 1) {
+           insideCircle += 1;
+      }
     } 
 }
 
