@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <chrono>
+#include <omp.h>
 using namespace std;
 using namespace std::chrono;
 
@@ -64,11 +65,8 @@ int main()
 {
     const size_t N = 1000; // size of an array
 
-    //clock_t start, end;  
-    clock_t start_wall, end_wall;
-    clock_t start_cpu, end_cpu; 
- 
     double ** A, ** B, ** C; // matrices
+    double start, end;
 
     printf("Starting:\n");
 
@@ -81,7 +79,8 @@ int main()
     zero_init_matrix(C, N);
 
 //  matrix multiplication algorithm
-    auto start = high_resolution_clock::now();
+    //auto start = high_resolution_clock::now();
+    start = omp_get_wtime();
 
     for (int k = 0; k < N; k++)
     	for (int j = 0; j < N; j++)
@@ -89,42 +88,47 @@ int main()
     	    	C[i][j] = A[i][k] * B[k][j];
     	    }    	    	
 //
-
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
+    end = omp_get_wtime(); 
+    //auto stop = high_resolution_clock::now();
+    //auto duration = duration_cast<microseconds>(stop - start);
 
     cout << "Time taken by KJI matmul: "
-         << duration.count() << " microseconds" << endl;
+         << end - start << endl;
 
 
 //  matrix multiplication algorithm
-    start = high_resolution_clock::now();
+    //start = high_resolution_clock::now();
+    start = omp_get_wtime();
     for (int i = 0; i < N; i++)
     	for (int j = 0; j < N; j++)
     	    for (int k = 0; k < N; k++){
     	    	C[i][j] = A[i][k] * B[k][j];
     	    } 
 
-    stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(stop - start);
+    end = omp_get_wtime();
+    //stop = high_resolution_clock::now();
+    //duration = duration_cast<microseconds>(stop - start);
 
     cout << "Time taken by IJK matmul: "
-         << duration.count() << " microseconds" << endl;
+         << end - start << endl;
 
 
 //  matrix multiplication algorithm
-    start = high_resolution_clock::now();
+    //start = high_resolution_clock::now();
+    start = omp_get_wtime();
     for (int j = 0; j < N; j++)
     	for (int i = 0; i < N; i++)
     	    for (int k = 0; k < N; k++){
     	    	C[i][j] = A[i][k] * B[k][j];
     	    }    
 
-    stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(stop - start);
+
+    end = omp_get_wtime();
+    //stop = high_resolution_clock::now();
+    //duration = duration_cast<microseconds>(stop - start);
 
     cout << "Time taken by JIK matmul: "
-         << duration.count() << " microseconds" << endl;
+         << end - start << endl;
 
 
     free_matrix(A, N);
