@@ -7,4 +7,4 @@ Repository for the HPC course at Skoltech
 P.S. to reproduce the code for ping pong game, do the following:
 In the file HW3 you can find ping_pong_1.cpp, and ping_pong_2.cpp, which is dedicated to the second task of ping pong game.
 
-3. HW: CUDA. READ HW_Cuda_report.pdf - all information there.
+3. HW: CUDA. READ HPC_Cuda_report.pdf - all information there.
